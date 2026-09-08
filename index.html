@@ -1,6 +1,11 @@
 <!doctype html>
 <!--
-Fractured Wavetable Generator v3.0
+Fractured Wavetable Generator v3.0.1
+
+v3.0.1 hotfix scope:
+- Fixes Animated stable modulation visualiser RAF ownership so one visible animated preview owns at most one pending animation-frame chain; this prevents runaway long-session animation work/memory pressure without changing visual/DSP semantics.
+- Adds a compact Morph transport control for explicitly discarding retained rendered Morph PCM. The button reports whole retained MiB only at 1MiB or above and updates only when cache retention changes; it does not poll or track in-progress render working memory.
+- Otherwise retains the qualified v3.0 executable/DSP behaviour and public schema contracts unchanged.
 
 v3.0 release / qualified release scope:
 - Retains the qualified rc81 executable/DSP baseline unchanged while tightening release qualification, wording, and hand-edited Drawn JSON guidance; direct sparse Haar/Walsh resample_mode semantics remain deliberately undefined.
@@ -23,7 +28,7 @@ v3.0 release / qualified release scope:
 - No ordinary generator, Morph, Phase, Window/Table-Safety, deterministic-random, Scanning, render, or export DSP is retuned.
 - The Drawn authority contract is narrowly extended: one pristine numeric construction pipeline may include an optional whole-waveform transform and/or final normalise gate; edited/flattened Drawn becomes literal Float32 authority; every runtime/copied/auditioned/LFO/literal-export Drawn table remains finite and within +/-1.
 - Parameterised Steps keeps exact steps=0 holds and the deliberate nonzero wrapped-Power alias; Cardinal/Cardinal-limit/Cardinal-clip share the rational public N mapping in [-1,+1]. Fourier's selector ceiling is now the real 512-sample domain 0..256; valid but unavailable sparse orders contribute zero.
-Current v3.0 product contracts:
+Current v3.0.1 product contracts:
 - Public JSON schema is 13. Import accepts public schema 12 and current schema 13 only.
 - Custom Scanning recipes live in one RAM-only page-session library. Exact duplicate documents are de-duplicated;
   same-name/different-trajectory recipes coexist and are disambiguated in UI labels; different names may intentionally
@@ -58,7 +63,7 @@ semantics from incidental code shape and preserve non-obvious compatibility, DSP
 <link rel="icon" type="image/png" sizes="48x48" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABGUlEQVR42u2ZyxHCMAxE48XQDb2lFHpLN7nAiRkONiNZWn9AOTJE0VutZAXSJV+f28IXtsWvAAiAAAiAHwPYj3Pbj5OSbCl28jzISok/7jdqXDCT//a5Na6rhViWmaaJWwFr933aMq+kfqmfph2jUmHAUKmkFKtSyxxktXEMVpkt819TLfRQiWkjrGwfE4BETY81YrkKaG2G0rbX4lWp2t59gFrgkfuNRhiwy8zuA/RsOIa90KPMzD7ArHu+VBhob2BOqCHngFdyrdVGT78y4qLXQ7WVkn4fI/YXT2Gy5QFWWA8bdV3mpMAaYTBqDR4+RlmQ2rhoCWRJ3ht8yAtNDaIFTvTr9HtaeKvnETfF/8QBEAABEAB/DfACUDl5gdnrIXMAAAAASUVORK5CYII=">
 <link rel="icon" type="image/png" sizes="192x192" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAYAAABS3GwHAAAEL0lEQVR42u3dS1JUQRBGYbto2A17cynszd04wZEjguBC1yMf3xlqoN6sPPlnNd1ye7o/v/8CmjKUAAQACAAQACAAQACAAAABAAIABAAIABAAIABAAIAAAAEAAgAEAAgAEAAgAEAAgAAAAQACAAQACAAQACAAQACAAAABgOXclWAOv//8/fBrb68vCrOhzo/U+uYnxMw/jM8gRLwaW4E2HcxPv0aN136NBDjUxNJgbY2v1lcCHJrg0mBtXa7+OQQ42LAkOF8PAhw+GBKcPTcCoO30J0CQg+meAiefnwCaoPVzE0BTtoYAgZq/m3ARnpcAKMuVb4YRINhk6pICUZ6TAGg7/QkQdDJVT4HVz/ed91n5PADaTX0CNN+/Nb4ViIwFnuvt9eXht5UTAK0hgPWn3dpDAFJ6HgJomu7TnwCarH2NCYC2058ASaa/hJIAMGQIAOvPbFq/FWL2dyWtL1YgINUAIMDiaJ4V292TZNV/JUkA09QKpJlyTq8uNV5ZPwmguSUAQADRnGL6d7sHrK6xBLAqtRaVALACAQQQzctXGq8YxauXBLBft76oE8Bl2AqEfE1c/eXQXTVuJYD30qixBLDCgABAMwEiRbPPCMRJWQmA1ncsAsAKZDLtj2aX6Rh1kQCQAJBuXS/kBDgYzdYgAqDx9I0wEO4rCh9psnn7gxpPF+CrB/7/+1Ui3qpiBfqR7aYvuaLXYaxq/ggSEBDTBHikmTRiXdmzn61XgSABTIqzu6l7QHABMjZvx7XLkLECAQQwBfMkzunnHlUPx24OCdCQXfeAKnes4XAgARBi/bFyBRbA4UAC2IHVoFjiDYeDzmc4shlrF4cViHyeM7MAqyLUeqUWEgDEWimA/dgaJAEKT6ZKzTd7Wles8ahyOIA7gOmPjgJUTBMyBhbA4RgOVcQeDgedz8odQKpZgU42zKOTRYpAAkilFEMmYsoSwGomATRZ/SY7vSpGrfHI/FD2fzUukQAaGVYggAD7UyPD/n/q1aAONR5ZDwewAgGVBLiaAj78ImlDCeCbNXnuAfZ/KxAQV4CrP4RbCqhxKAGyrUHWNjUOuwJ9NoFc4NR4NvdsB2T656hxyzuAxrJWZPt3ehUIEgAgQJPoq7CmqbEEAAjgMuzfFVIAhwMJABDA9O/0TBlrPBQDEqC4BGSEO4DVzpAhAAk0/2YBHA4kgOb3rJ0FcDjEa58AuwvVUTqDxgpkIm+UoIJwt6f78/vOv3D1x/BMQXUOnQAaVMq0X4FWFZBcapzmDjC7kJpfjdtegjX/+tpUrfH2S/DsC5vmX1vn6vUNIcB3D0jT75GgQ51DCfDVQWl8NW4jAOASDBAAIABAAIAAAAEAAgAEAAgAEAAgAEAAgAAAAQACAAQACAAQACAAQACAACAAQACAAAABAAIABAAIABAAIABAAIAAQA3+AVA9ue7ZyNVQAAAAAElFTkSuQmCC">
 <link rel="shortcut icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAMAEBAAAAAAIACgAAAANgAAACAgAAAAACAA7QAAANYAAAAwMAAAAAAgAH8BAADDAQAAiVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAZ0lEQVR4nGNkZmH9z0ABYKJEM20NKLj8i6Hg8i+CclgNQNaIy5AJumz4XUAswGnABF02uC24XAc3AJczcWnC6wJChsFch2EAocAi2gX4NGGzhAlZAz7nw+TQDcdwATbb8XmDcehnJgDQ4CkpxFDFzQAAAABJRU5ErkJggolQTkcNChoKAAAADUlIRFIAAAAgAAAAIAgGAAAAc3p69AAAALRJREFUeJztl0sOgCAMRIu/23g3juLdvI0b3RlApVMqIcbOzkjbl+lgouuHcaeG6loONwADICIapAV+3aLnZZ5UtWoH0qbScyIH0GGcQteaZwAGyO2ecyZ8n2amyAFJ8Dh9ZwV3QtaQsx8G4JpodAL4dXvtmhUBhCBNAaTK5QBZHQtQc/8QQG2dAJIvWypNbdYBjf1o7SOA5jZIaiMATchKa6EQ1gS7ALw5DOnl7M/IAH4PcADd7kdZR/NDrwAAAABJRU5ErkJggolQTkcNChoKAAAADUlIRFIAAAAwAAAAMAgGAAAAVwL5hwAAAUZJREFUeJztmMsRgzAMRCEhdENvlEJvdMMlOcEA8UeflWVmvGcQflpJ2O7fw+fbPVgv7wVo1QC81QC81QC8BQeY162b1w0dNhq7R/7IQgtfptE0LsyBWNa1buTehwBYlQxFRZpYChh771yWgygy4SMWCvVTtWOUmhg4wDKNwUxZOVWtA3fFxrEKIJVVzfznuAV1ILdoizJ6RAmlEiMGoGQTsY3IqToHuGV2Adh3e5JapWYb3QcHwD2w5/7mrFxiRCXEgbPugwOgRMPlJHEd0sRceGR5JgG8+4CSmAsA5QXLCSWRuoRQi5O6nQWwvGFAiOWA5qNcp6jP/wF4jFNNYkhnYsrhWiJEGRXdzFGBOYkJAtTwV6ZK7IAVJDduFCAVSLN4NLjLgSYGIYEj3U7v0wKdPURc6PW6h6o7E3PVALzVALzVALz1A1A5eYHJ8L+TAAAAAElFTkSuQmCC">
-<title>Fractured Wavetable Generator v3.0</title>
+<title>Fractured Wavetable Generator v3.0.1</title>
 <style>
   :root {
     --bg: #101216;
@@ -534,7 +539,7 @@ semantics from incidental code shape and preserve non-obvious compatibility, DSP
 <body>
 <header>
   <div class="headerTitleRow">
-    <h1>Fractured Wavetable Generator v3.0</h1>
+    <h1>Fractured Wavetable Generator v3.0.1</h1>
     <p class="headerTagline">Browser wavetable generator: compact chaos engines, morph audition, WAV + JSON export.</p>
   </div>
   <p id="renderDiagnosticsNotice" class="warn" hidden>Render diagnostics are enabled for this page session. JSON sidecars may be much larger; JSON import size limits are disabled while diagnostics are active.</p>
@@ -628,6 +633,7 @@ semantics from incidental code shape and preserve non-obvious compatibility, DSP
             <button class="danger" id="stopAudio2">Stop Audio</button>
             <button class="primary" id="playMorph">Play Forward Morph</button>
             <button id="playReverse">Play Reverse</button>
+            <button id="clearMorphCache" type="button" disabled title="Discard cached rendered Morph audio. Patch and render settings are unchanged.">Clear Morph Cache</button>
           </div>
           <div class="buttonbar">
             <button id="exportForward">Export Morph</button>
@@ -911,8 +917,8 @@ semantics from incidental code shape and preserve non-obvious compatibility, DSP
   // length is treated uniformly and deterministically mapped into that domain; a 512-sample
   // source needs no resampling. Window controls expose inclusive positions 1–512, and DSP
   // helpers translate those one-based positions to zero-based indexes.
-  const APP_VERSION = 'v3.0';
-  const APPLICATION_BUILD_ID = 'fwg-v3.0-release-20260903';
+  const APP_VERSION = 'v3.0.1';
+  const APPLICATION_BUILD_ID = 'fwg-v3.0.1-hotfix-20260908';
   // POT GANG AUTHORING CONTRACT: ?potgang=1 exposes the slim hidden manual Pot Gang / Recipe Probe.
   // It is session-only and does not alter generator DSP or Random/Explorer planning. Export JSON.GZ writes the
   // canonical portable Scanning/LFO recipe schema used by ordinary imports. Generic runtime_environment.page_url
@@ -20489,7 +20495,9 @@ Warnings: ${rendered.notes.length ? rendered.notes.join('; ') : 'none'}`;
     // FM/PWM/Ring depth sweep, so one unchanged subsystem cannot freeze the other.
     const visualInputKey = visibleAnimatedVisualDynamicInputKey();
     if (visualInputKey !== state.visualAnimatedInputKey) updateVisuals(false, false);
-    if (hasAnimatedVisuals()) state.visualRaf = requestAnimationFrame(visualAnimationTick);
+    // updateVisuals() may already have called ensureVisualAnimationLoop() and scheduled the
+    // next frame. Preserve single-owner RAF semantics instead of forking another chain here.
+    if (hasAnimatedVisuals() && !state.visualRaf) state.visualRaf = requestAnimationFrame(visualAnimationTick);
   }
 
 
@@ -21841,6 +21849,7 @@ registerProcessor('fractured-oscillator',FracturedOscillatorProcessor);
     state.audio.morphCacheVariants = {on: null, off: null};
     // Compatibility/debug pointer: always points at the most recently selected variant, never owns data.
     state.audio.morphCache = null;
+    updateMorphCacheButton();
   }
 
   function morphRenderCacheSlotBytes(slot) {
@@ -21882,6 +21891,20 @@ registerProcessor('fractured-oscillator',FracturedOscillatorProcessor);
     return morphRenderCacheVariantBytes(variants.on).totalBytes + morphRenderCacheVariantBytes(variants.off).totalBytes;
   }
 
+  const MORPH_CACHE_LABEL_MIB_BYTES = 1024 * 1024;
+  function updateMorphCacheButton() {
+    const button = document.getElementById('clearMorphCache');
+    if (!button) return;
+    const retainedBytes = morphRenderAllVariantPcmBytes();
+    button.disabled = retainedBytes <= 0;
+    if (retainedBytes >= MORPH_CACHE_LABEL_MIB_BYTES) {
+      const retainedMiB = Math.max(1, Math.round(retainedBytes / MORPH_CACHE_LABEL_MIB_BYTES));
+      button.textContent = `Clear ${retainedMiB}MiB Morph Cache`;
+    } else {
+      button.textContent = 'Clear Morph Cache';
+    }
+  }
+
   // CACHE MEMORY CONTRACT: cache is disposable optimization. First keep at most one maximum-size policy worth
   // of retained PCM; then, if a new valid render would still exceed the global working-memory
   // ceiling, evict remaining cache rather than rejecting the render because old preview data exists.
@@ -21909,6 +21932,7 @@ registerProcessor('fractured-oscillator',FracturedOscillatorProcessor);
       retained = morphRenderAllVariantPcmBytes();
     }
     state.audio.morphCache = variants[preferredKey] || null;
+    updateMorphCacheButton();
     return retained;
   }
 
@@ -32151,6 +32175,8 @@ Use Apply MPC Settings, or uncheck MPC Wavetable Mode for ordinary FWG export.`)
     $('randomMorphEnd').onclick = () => randomiseMorphEndpoint('end', 'morph');
     $('playMorph').onclick = () => FWG_BROWSER_AUDIO.toggleMorph(false);
     $('playReverse').onclick = () => FWG_BROWSER_AUDIO.toggleMorph(true);
+    if ($('clearMorphCache')) $('clearMorphCache').onclick = () => clearMorphRenderCaches();
+    updateMorphCacheButton();
     $('exportForward').onclick = () => { if (morphRenderWorkBlockedByBulkRender('Forward morph export')) return; globalPanicStop(); workspaceMpcLayoutState('morph').enabled ? exportMpcDirection('forward') : exportOrdinaryMorphDirection('forward'); };
     $('exportReverse').onclick = () => { if (morphRenderWorkBlockedByBulkRender('Reverse morph export')) return; globalPanicStop(); workspaceMpcLayoutState('morph').enabled ? exportMpcDirection('reverse') : exportOrdinaryMorphDirection('reverse'); };
     $('exportBoth').onclick = () => { if (morphRenderWorkBlockedByBulkRender('Both-direction morph export')) return; globalPanicStop(); workspaceMpcLayoutState('morph').enabled ? exportMpcBothDirections() : exportBothDirections(); };
