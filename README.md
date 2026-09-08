@@ -133,3 +133,27 @@ The v3 wiki includes Start Here, workspace guides, generator/routing/window/modu
 ## License and provenance
 
 The browser implementation is free software under GPL-2.0-only and comes with no warranty. It is inspired by Carl Hudson's Fractal Wavetable Generator concept; older/upstream implementations retain their own provenance.
+
+## YouTube
+
+https://www.youtube.com/@Fractured_Waves
+
+## Support the project
+
+https://ko-fi.com/fracturedwavetable
+
+https://stripe.com/@fractured_waves
+
+Bitcoin: bc1qqspwlfkvwt4lztge50tnzxg0uxrgmc9htsme87
+
+BTC Silent Payments: sp1qqgczmrjdw8kj7sptn69q6403k8cwzlg8pf6yjg3yn0mlgteexkpxqqe2us0jtd9ecmk76hykey35ws62gn8a9he6mtwhfxgw78v5lsg2hqjm324e
+
+BTC Lightning: fractured.waves@cake.cash
+
+Ethereum: 0xDBcF7D0422765F7ca4d7f58AAD2D2837dC071577
+
+Monero: 85aQ7mKRk3y1ceDsh22uhp14BBMyzyJJQGFh25Fbzf83b1VeZJXXM6GXpvDEtF3f45cdJHSXA8khfKXbVHPi2Kc4MrMtFwG
+
+Zano: ZxCa8EGdcL9Tkzp9g6GHPoMCn6wrTXGcFfnhqmUrq1VMZUugJ8XEiUBA5axQaCsNWta7vhnSEQag8cFxiK3NB4HV2Wk4ZFJq8
+
+fUSD/zano: ZxCa8EGdcL9Tkzp9g6GHPoMCn6wrTXGcFfnhqmUrq1VMZUugJ8XEiUBA5axQaCsNWta7vhnSEQag8cFxiK3NB4HV2Wk4ZFJq8
